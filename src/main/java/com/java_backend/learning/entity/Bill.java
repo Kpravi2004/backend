@@ -19,8 +19,14 @@ public class Bill {
     @Column(name = "total_amount")
     private Double totalAmount;
 
-    @Column(name = "seat_ids") // store comma-separated seat IDs, e.g., "1,2,3"
+    @Column(name = "seat_ids")
     private String seatIds;
+
+    @Column(name = "table_numbers")
+    private String tableNumbers;
+
+    @Column(name = "waiter_names")
+    private String waiterNames;
 
     @OneToMany(mappedBy = "bill", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<BillItem> items;
@@ -50,6 +56,12 @@ public class Bill {
 
     public String getSeatIds() { return seatIds; }
     public void setSeatIds(String seatIds) { this.seatIds = seatIds; }
+
+    public String getTableNumbers() { return tableNumbers; }
+    public void setTableNumbers(String tableNumbers) { this.tableNumbers = tableNumbers; }
+
+    public String getWaiterNames() { return waiterNames; }
+    public void setWaiterNames(String waiterNames) { this.waiterNames = waiterNames; }
 
     public List<BillItem> getItems() { return items; }
     public void setItems(List<BillItem> items) { this.items = items; }

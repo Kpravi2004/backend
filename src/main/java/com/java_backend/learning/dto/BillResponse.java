@@ -9,15 +9,20 @@ public class BillResponse {
     private String status;
     private Double totalAmount;
     private List<ItemDto> items;
+    private String tableNumbers;   // comma-separated
+    private String waiterNames;    // comma-separated
 
     public BillResponse() {}
 
-    public BillResponse(Long id, LocalDateTime dateTime, String status, Double totalAmount, List<ItemDto> items) {
+    public BillResponse(Long id, LocalDateTime dateTime, String status, Double totalAmount, 
+                        List<ItemDto> items, String tableNumbers, String waiterNames) {
         this.id = id;
         this.dateTime = dateTime;
         this.status = status;
         this.totalAmount = totalAmount;
         this.items = items;
+        this.tableNumbers = tableNumbers;
+        this.waiterNames = waiterNames;
     }
 
     // Getters and setters
@@ -35,4 +40,10 @@ public class BillResponse {
 
     public List<ItemDto> getItems() { return items; }
     public void setItems(List<ItemDto> items) { this.items = items; }
+
+    public String getTableNumbers() { return tableNumbers; }
+    public void setTableNumbers(String tableNumbers) { this.tableNumbers = tableNumbers; }
+
+    public String getWaiterNames() { return waiterNames; }
+    public void setWaiterNames(String waiterNames) { this.waiterNames = waiterNames; }
 }

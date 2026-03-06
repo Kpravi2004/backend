@@ -5,6 +5,7 @@ import com.java_backend.learning.dto.BillResponse;
 import com.java_backend.learning.dto.ItemDto;
 import com.java_backend.learning.entity.Bill;
 import com.java_backend.learning.entity.BillItem;
+import com.java_backend.learning.entity.SeatMaster;
 import com.java_backend.learning.repository.BillRepository;
 import com.java_backend.learning.repository.BillItemRepository;
 import com.java_backend.learning.repository.SeatRepository;
@@ -13,9 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,14 +31,12 @@ public class BillService {
 
     @Transactional
     public BillResponse createBill(BillRequest request) {
-        // 1. Create bill header
         Bill bill = new Bill();
         bill.setDateTime(LocalDateTime.now());
         String status = request.getStatus() != null ? request.getStatus() : "pending";
         bill.setStatus(status);
         bill.setTotalAmount(request.getTotal());
         
-        // Store seatIds as comma-separated string
         if (request.getSeatIds() != null && !request.getSeatIds().isEmpty()) {
             String seatIdsStr = request.getSeatIds().stream()
                     .map(String::valueOf)
@@ -48,7 +45,6 @@ public class BillService {
         }
         Bill savedBill = billRepository.save(bill);
 
-        // 2. Create bill items
         List<BillItem> items = request.getItems().stream().map(itemDto -> {
             BillItem item = new BillItem();
             item.setItemName(itemDto.getProductName());
@@ -59,35 +55,31 @@ public class BillService {
             return item;
         }).collect(Collectors.toList());
         billItemRepository.saveAll(items);
-
-        // Set items on savedBill for consistency (optional)
         savedBill.setItems(items);
 
-        // 3. Update seat billing status
-        if (request.getSeatIds() != null) {
+        // Update seat billing status and collect table/waiter info
+        if (request.getSeatIds() != null && !request.getSeatIds().isEmpty()) {
             for (Integer seatId : request.getSeatIds()) {
                 seatRepository.updateBillingStatus(seatId, true);
             }
+            // Fetch seats with table and waiter to populate bill fields
+            List<SeatMaster> seats = seatRepository.findSeatsWithTableAndWaiter(request.getSeatIds());
+            Set<String> tableNumbers = new HashSet<>();
+            Set<String> waiterNames = new HashSet<>();
+            for (SeatMaster seat : seats) {
+                if (seat.getTable() != null) {
+                    tableNumbers.add(String.valueOf(seat.getTable().getTableNumber()));
+                    if (seat.getTable().getWaiter() != null) {
+                        waiterNames.add(seat.getTable().getWaiter().getWaiterName());
+                    }
+                }
+            }
+            savedBill.setTableNumbers(String.join(", ", tableNumbers));
+            savedBill.setWaiterNames(String.join(", ", waiterNames));
+            billRepository.save(savedBill);
         }
 
-        // 4. Build response using the items list we have (avoid calling savedBill.getItems())
-        List<ItemDto> itemDtos = items.stream().map(item -> {
-            ItemDto dto = new ItemDto();
-            dto.setProductCode(item.getProductCode());
-            dto.setProductName(item.getItemName());
-            dto.setQuantity(item.getQuantity());
-            dto.setUnitPrice(item.getPrice());
-            dto.setSubtotal(item.getQuantity() * item.getPrice());
-            return dto;
-        }).collect(Collectors.toList());
-
-        return new BillResponse(
-            savedBill.getId(),
-            savedBill.getDateTime(),
-            savedBill.getStatus(),
-            savedBill.getTotalAmount(),
-            itemDtos
-        );
+        return getBillResponse(savedBill);
     }
 
     public List<BillResponse> getAllBills() {
@@ -115,7 +107,6 @@ public class BillService {
         bill.setStatus("completed");
         Bill savedBill = billRepository.save(bill);
 
-        // Reset seats to Free and billingStatus false
         if (savedBill.getSeatIds() != null && !savedBill.getSeatIds().isEmpty()) {
             List<Integer> seatIdList = Arrays.stream(savedBill.getSeatIds().split(","))
                     .map(Integer::parseInt)
@@ -128,7 +119,6 @@ public class BillService {
         return getBillResponse(savedBill);
     }
 
-    // Helper to build response (handles null items)
     private BillResponse getBillResponse(Bill bill) {
         List<ItemDto> itemDtos = bill.getItems() != null ?
             bill.getItems().stream().map(item -> {
@@ -146,7 +136,9 @@ public class BillService {
             bill.getDateTime(),
             bill.getStatus(),
             bill.getTotalAmount(),
-            itemDtos
+            itemDtos,
+            bill.getTableNumbers(),
+            bill.getWaiterNames()
         );
     }
 }
