@@ -6,7 +6,7 @@ public class BillRequest {
     private List<Integer> seatIds;
     private List<ItemDto> items;
     private Double total;
-    private String status;  // new field
+    private String status;  // <-- add this
 
     // Getters and setters
     public List<Integer> getSeatIds() { return seatIds; }

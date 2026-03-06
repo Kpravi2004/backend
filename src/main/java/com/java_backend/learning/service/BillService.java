@@ -29,60 +29,59 @@ public class BillService {
     private SeatRepository seatRepository;
 
     @Transactional
-public BillResponse createBill(BillRequest request) {
-    // 1. Create bill header
-    Bill bill = new Bill();
-    bill.setDateTime(LocalDateTime.now());
-    // Use status from request if provided, otherwise "pending"
-    String status = request.getStatus() != null ? request.getStatus() : "pending";
-    bill.setStatus(status);
-    bill.setTotalAmount(request.getTotal());
-    Bill savedBill = billRepository.save(bill);
+    public BillResponse createBill(BillRequest request) {
+        // 1. Create bill header with status from request (default "pending")
+        Bill bill = new Bill();
+        bill.setDateTime(LocalDateTime.now());
+        String status = request.getStatus() != null ? request.getStatus() : "pending";
+        bill.setStatus(status);
+        bill.setTotalAmount(request.getTotal());
+        Bill savedBill = billRepository.save(bill);
 
-    // 2. Create bill items (including productCode)
-    List<BillItem> items = request.getItems().stream().map(itemDto -> {
-        BillItem item = new BillItem();
-        item.setItemName(itemDto.getProductName());
-        item.setProductCode(itemDto.getProductCode());
-        item.setPrice(itemDto.getUnitPrice());
-        item.setQuantity(itemDto.getQuantity());
-        item.setBill(savedBill);
-        return item;
-    }).collect(Collectors.toList());
-    billItemRepository.saveAll(items);
+        // 2. Create bill items
+        List<BillItem> items = request.getItems().stream().map(itemDto -> {
+            BillItem item = new BillItem();
+            item.setItemName(itemDto.getProductName());
+            item.setProductCode(itemDto.getProductCode());
+            item.setPrice(itemDto.getUnitPrice());
+            item.setQuantity(itemDto.getQuantity());
+            item.setBill(savedBill);
+            return item;
+        }).collect(Collectors.toList());
+        billItemRepository.saveAll(items);
 
-    // 3. Update seat billing status
-    if (request.getSeatIds() != null) {
-        for (Integer seatId : request.getSeatIds()) {
-            seatRepository.updateBillingStatus(seatId, true);
+        // 3. Update seat billing status
+        if (request.getSeatIds() != null) {
+            for (Integer seatId : request.getSeatIds()) {
+                seatRepository.updateBillingStatus(seatId, true);
+            }
         }
+
+        // 4. Prepare response
+        List<ItemDto> itemDtos = items.stream().map(item -> {
+            ItemDto dto = new ItemDto();
+            dto.setProductCode(item.getProductCode());
+            dto.setProductName(item.getItemName());
+            dto.setQuantity(item.getQuantity());
+            dto.setUnitPrice(item.getPrice());
+            dto.setSubtotal(item.getQuantity() * item.getPrice());
+            return dto;
+        }).collect(Collectors.toList());
+
+        return new BillResponse(
+            savedBill.getId(),
+            savedBill.getDateTime(),
+            savedBill.getStatus(),
+            savedBill.getTotalAmount(),
+            itemDtos
+        );
     }
-
-    // 4. Prepare response (include productCode)
-    List<ItemDto> itemDtos = items.stream().map(item -> {
-        ItemDto dto = new ItemDto();
-        dto.setProductCode(item.getProductCode());
-        dto.setProductName(item.getItemName());
-        dto.setQuantity(item.getQuantity());
-        dto.setUnitPrice(item.getPrice());
-        dto.setSubtotal(item.getQuantity() * item.getPrice());
-        return dto;
-    }).collect(Collectors.toList());
-
-    return new BillResponse(
-        savedBill.getId(),
-        savedBill.getDateTime(),
-        savedBill.getStatus(),
-        savedBill.getTotalAmount(),
-        itemDtos
-    );
-}
 
     public List<BillResponse> getAllBills() {
         return billRepository.findAll().stream().map(bill -> {
             List<ItemDto> itemDtos = bill.getItems().stream().map(item -> {
                 ItemDto dto = new ItemDto();
-                dto.setProductCode(item.getProductCode());   // <-- new
+                dto.setProductCode(item.getProductCode());
                 dto.setProductName(item.getItemName());
                 dto.setQuantity(item.getQuantity());
                 dto.setUnitPrice(item.getPrice());
@@ -104,7 +103,7 @@ public BillResponse createBill(BillRequest request) {
         Bill bill = billRepository.findById(id).orElseThrow(() -> new RuntimeException("Bill not found"));
         List<ItemDto> itemDtos = bill.getItems().stream().map(item -> {
             ItemDto dto = new ItemDto();
-            dto.setProductCode(item.getProductCode());       // <-- new
+            dto.setProductCode(item.getProductCode());
             dto.setProductName(item.getItemName());
             dto.setQuantity(item.getQuantity());
             dto.setUnitPrice(item.getPrice());
