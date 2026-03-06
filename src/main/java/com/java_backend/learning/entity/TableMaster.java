@@ -1,12 +1,8 @@
 package com.java_backend.learning.entity;
-
-import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.ArrayList;
 import java.util.List;
+import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 @Table(name = "table_entity")
@@ -16,30 +12,38 @@ public class TableMaster {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer tableId;
 
-    @NotNull
     @JsonProperty("table_number")
     private Integer tableNumber;
 
-    @NotBlank
     @JsonProperty("table_name")
     private String tableName;
 
-    @NotNull
     @JsonProperty("total_seats")
     private Integer totalSeats;
 
-    @NotBlank
     private String status; // Active / Inactive
 
-    @NotBlank
     @JsonProperty("floor_name")
     private String floorName;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "waiter_id")
+    private Waiter waiter;  // relationship, not a direct column
+
     @OneToMany(mappedBy = "table", cascade = CascadeType.ALL)
-    @JsonManagedReference
     private List<SeatMaster> seats = new ArrayList<>();
 
+    // Transient fields for JSON (will be populated from waiter)
+    @Transient
+    @JsonProperty("waiterId")
+    private Integer waiterId;
+
+    @Transient
+    @JsonProperty("waiterName")
+    private String waiterName;
+
     // Getters & Setters
+
     public Integer getTableId() { return tableId; }
     public void setTableId(Integer tableId) { this.tableId = tableId; }
 
@@ -57,6 +61,26 @@ public class TableMaster {
 
     public String getFloorName() { return floorName; }
     public void setFloorName(String floorName) { this.floorName = floorName; }
+
+    public Waiter getWaiter() { return waiter; }
+    public void setWaiter(Waiter waiter) {
+        this.waiter = waiter;
+        // Update transient fields
+        if (waiter != null) {
+            this.waiterId = waiter.getWaiterId();
+            this.waiterName = waiter.getWaiterName();
+        } else {
+            this.waiterId = null;
+            this.waiterName = null;
+        }
+    }
+
+    // Transient getters
+    public Integer getWaiterId() { return waiterId; }
+    public void setWaiterId(Integer waiterId) { this.waiterId = waiterId; }
+
+    public String getWaiterName() { return waiterName; }
+    public void setWaiterName(String waiterName) { /* not stored */ }
 
     public List<SeatMaster> getSeats() { return seats; }
     public void setSeats(List<SeatMaster> seats) { this.seats = seats; }

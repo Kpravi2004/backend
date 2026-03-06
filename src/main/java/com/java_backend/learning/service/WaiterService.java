@@ -29,20 +29,15 @@ public class WaiterService {
     }
 
     public Waiter update(Integer id, Waiter updated) {
-
         Waiter waiter = getById(id);
         waiter.setWaiterName(updated.getWaiterName());
-
         return repository.save(waiter);
     }
 
     public Waiter patch(Integer id, Waiter updated) {
-
         Waiter waiter = getById(id);
-
         if (updated.getWaiterName() != null)
             waiter.setWaiterName(updated.getWaiterName());
-
         return repository.save(waiter);
     }
 

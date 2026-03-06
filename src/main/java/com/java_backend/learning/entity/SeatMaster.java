@@ -20,6 +20,9 @@ public class SeatMaster {
     @JsonProperty("color_code")
     private String colorCode;
 
+    @JsonProperty("billing_status") // will appear in JSON
+    private Boolean billingStatus = false; // default false
+
     @ManyToOne
     @JoinColumn(name = "table_id")
     @JsonBackReference
@@ -48,6 +51,9 @@ public class SeatMaster {
 
     public String getColorCode() { return colorCode; }
     public void setColorCode(String colorCode) { this.colorCode = colorCode; }
+
+    public Boolean getBillingStatus() { return billingStatus; }
+    public void setBillingStatus(Boolean billingStatus) { this.billingStatus = billingStatus; }
 
     public TableMaster getTable() { return table; }
     public void setTable(TableMaster table) { this.table = table; }

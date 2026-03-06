@@ -11,58 +11,62 @@ import java.util.List;
 @Service
 public class SeatService {
 
-    private final SeatRepository seatRepo;
-    private final TableRepository tableRepo;
+    private final SeatRepository seatRepository;
+    private final TableRepository tableRepository;
 
-    public SeatService(SeatRepository seatRepo, TableRepository tableRepo) {
-        this.seatRepo = seatRepo;
-        this.tableRepo = tableRepo;
+    public SeatService(SeatRepository seatRepository, TableRepository tableRepository) {
+        this.seatRepository = seatRepository;
+        this.tableRepository = tableRepository;
     }
 
-    // ✅ CREATE
+    // ✅ CREATE (with tableId)
     public SeatMaster create(Integer tableId, SeatMaster seat) {
-
-        TableMaster table = tableRepo.findById(tableId)
+        TableMaster table = tableRepository.findById(tableId)
                 .orElseThrow(() -> new RuntimeException("Table not found"));
 
         seat.setTable(table);
-
-        if (seat.getStatus() == null)
+        if (seat.getStatus() == null) {
             seat.setStatus("Free");
-
-        return seatRepo.save(seat);
+        }
+        if (seat.getBillingStatus() == null) {
+            seat.setBillingStatus(false);
+        }
+        return seatRepository.save(seat);
     }
 
     // ✅ GET ALL
     public List<SeatMaster> getAll() {
-        return seatRepo.findAll();
+        return seatRepository.findAll();
     }
 
     // ✅ GET BY ID
     public SeatMaster getById(Integer id) {
-        return seatRepo.findById(id)
+        return seatRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Seat not found"));
     }
 
     // ✅ GET BY TABLE
     public List<SeatMaster> getByTable(Integer tableId) {
-        return seatRepo.findByTable_TableId(tableId);
+        return seatRepository.findByTableId(tableId);
     }
 
-    // ✅ FULL UPDATE
+    // ✅ FULL UPDATE (PUT)
     public SeatMaster update(Integer id, SeatMaster updated) {
-
         SeatMaster seat = getById(id);
 
         seat.setSeatNo(updated.getSeatNo());
         seat.setStatus(updated.getStatus());
+        // update billing status if provided
+        if (updated.getBillingStatus() != null) {
+            seat.setBillingStatus(updated.getBillingStatus());
+        }
 
-        return seatRepo.save(seat);
+        // Color is set automatically via setStatus logic in entity
+        return seatRepository.save(seat);
     }
 
-    // ✅ PARTIAL UPDATE
+    // ✅ PARTIAL UPDATE (PATCH)
     public SeatMaster patch(Integer id, SeatMaster updated) {
-
         SeatMaster seat = getById(id);
 
         if (updated.getSeatNo() != null)
@@ -71,11 +75,27 @@ public class SeatService {
         if (updated.getStatus() != null)
             seat.setStatus(updated.getStatus());
 
-        return seatRepo.save(seat);
+        if (updated.getBillingStatus() != null)
+            seat.setBillingStatus(updated.getBillingStatus());
+
+        return seatRepository.save(seat);
     }
+    public List<SeatMaster> updateBillingStatus(List<Integer> seatIds, Boolean billingStatus) {
+    List<SeatMaster> seats = seatRepository.findAllById(seatIds);
+    for (SeatMaster seat : seats) {
+        seat.setBillingStatus(billingStatus);
+    }
+    return seatRepository.saveAll(seats);
+}
 
     // ✅ DELETE
     public void delete(Integer id) {
-        seatRepo.deleteById(id);
+        seatRepository.deleteById(id);
     }
+
+public void updateBillingStatus(Integer seatId, boolean billingStatus) {
+    SeatMaster seat = getById(seatId);
+    seat.setBillingStatus(billingStatus);
+    seatRepository.save(seat);
+}
 }
