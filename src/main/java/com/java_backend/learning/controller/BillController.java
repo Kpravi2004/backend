@@ -30,13 +30,25 @@ public class BillController {
         return ResponseEntity.ok(bills);
     }
 
+    @GetMapping("/status/{status}")
+    public ResponseEntity<List<BillResponse>> getBillsByStatus(@PathVariable String status) {
+        List<BillResponse> bills = billService.getBillsByStatus(status);
+        return ResponseEntity.ok(bills);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<BillResponse> getBillById(@PathVariable Long id) {
         BillResponse bill = billService.getBillById(id);
         return ResponseEntity.ok(bill);
     }
 
-    // Explicit OPTIONS handler (optional, but safe)
+    @PutMapping("/{id}/confirm")
+    public ResponseEntity<BillResponse> confirmBill(@PathVariable Long id) {
+        BillResponse response = billService.confirmBill(id);
+        return ResponseEntity.ok(response);
+    }
+
+    // OPTIONS handler remains unchanged
     @RequestMapping(method = RequestMethod.OPTIONS)
     public ResponseEntity<?> handleOptions() {
         return ResponseEntity.ok()

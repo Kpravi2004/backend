@@ -19,7 +19,14 @@ public interface SeatRepository extends JpaRepository<SeatMaster, Integer> {
     int updateBillingStatus(@Param("seatId") int seatId, @Param("billingStatus") boolean billingStatus);
 
     // Find seats by the associated table's ID
-    // Assumes SeatMaster has a relation 'table' (e.g., @ManyToOne) with an 'id' field
     @Query("SELECT s FROM SeatMaster s WHERE s.table.id = :tableId")
     List<SeatMaster> findByTableId(@Param("tableId") Integer tableId);
+
+    // New: Update both status and billing status (used when confirming a bill)
+    @Modifying
+    @Transactional
+    @Query("UPDATE SeatMaster s SET s.status = :status, s.billingStatus = :billingStatus WHERE s.id = :seatId")
+    int updateSeatStatusAndBilling(@Param("seatId") int seatId, 
+                                    @Param("status") String status, 
+                                    @Param("billingStatus") boolean billingStatus);
 }

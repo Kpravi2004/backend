@@ -19,16 +19,20 @@ public class Bill {
     @Column(name = "total_amount")
     private Double totalAmount;
 
+    @Column(name = "seat_ids") // store comma-separated seat IDs, e.g., "1,2,3"
+    private String seatIds;
+
     @OneToMany(mappedBy = "bill", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<BillItem> items;
 
     // Constructors
     public Bill() {}
 
-    public Bill(LocalDateTime dateTime, String status, Double totalAmount) {
+    public Bill(LocalDateTime dateTime, String status, Double totalAmount, String seatIds) {
         this.dateTime = dateTime;
         this.status = status;
         this.totalAmount = totalAmount;
+        this.seatIds = seatIds;
     }
 
     // Getters and setters
@@ -43,6 +47,9 @@ public class Bill {
 
     public Double getTotalAmount() { return totalAmount; }
     public void setTotalAmount(Double totalAmount) { this.totalAmount = totalAmount; }
+
+    public String getSeatIds() { return seatIds; }
+    public void setSeatIds(String seatIds) { this.seatIds = seatIds; }
 
     public List<BillItem> getItems() { return items; }
     public void setItems(List<BillItem> items) { this.items = items; }
