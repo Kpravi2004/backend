@@ -9,13 +9,14 @@ public class BillResponse {
     private String status;
     private Double totalAmount;
     private List<ItemDto> items;
-    private String tableNumbers;   // comma-separated
-    private String waiterNames;    // comma-separated
+    private String tableNumbers;
+    private String waiterNames;
+    private String paymentMethod;
 
     public BillResponse() {}
 
     public BillResponse(Long id, LocalDateTime dateTime, String status, Double totalAmount, 
-                        List<ItemDto> items, String tableNumbers, String waiterNames) {
+                        List<ItemDto> items, String tableNumbers, String waiterNames, String paymentMethod) {
         this.id = id;
         this.dateTime = dateTime;
         this.status = status;
@@ -23,6 +24,7 @@ public class BillResponse {
         this.items = items;
         this.tableNumbers = tableNumbers;
         this.waiterNames = waiterNames;
+        this.paymentMethod = paymentMethod;
     }
 
     // Getters and setters
@@ -46,4 +48,7 @@ public class BillResponse {
 
     public String getWaiterNames() { return waiterNames; }
     public void setWaiterNames(String waiterNames) { this.waiterNames = waiterNames; }
+
+    public String getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
 }

@@ -6,7 +6,8 @@ public class BillRequest {
     private List<Integer> seatIds;
     private List<ItemDto> items;
     private Double total;
-    private String status;  // <-- add this
+    private String status;
+    private String paymentMethod;  // new field
 
     // Getters and setters
     public List<Integer> getSeatIds() { return seatIds; }
@@ -20,4 +21,7 @@ public class BillRequest {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
 }

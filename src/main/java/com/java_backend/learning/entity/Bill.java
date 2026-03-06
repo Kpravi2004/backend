@@ -28,17 +28,21 @@ public class Bill {
     @Column(name = "waiter_names")
     private String waiterNames;
 
+    @Column(name = "payment_method")
+    private String paymentMethod;  // Cash, Card, UPI, etc.
+
     @OneToMany(mappedBy = "bill", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<BillItem> items;
 
     // Constructors
     public Bill() {}
 
-    public Bill(LocalDateTime dateTime, String status, Double totalAmount, String seatIds) {
+    public Bill(LocalDateTime dateTime, String status, Double totalAmount, String seatIds, String paymentMethod) {
         this.dateTime = dateTime;
         this.status = status;
         this.totalAmount = totalAmount;
         this.seatIds = seatIds;
+        this.paymentMethod = paymentMethod;
     }
 
     // Getters and setters
@@ -62,6 +66,9 @@ public class Bill {
 
     public String getWaiterNames() { return waiterNames; }
     public void setWaiterNames(String waiterNames) { this.waiterNames = waiterNames; }
+
+    public String getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
 
     public List<BillItem> getItems() { return items; }
     public void setItems(List<BillItem> items) { this.items = items; }

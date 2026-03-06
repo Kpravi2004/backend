@@ -36,6 +36,7 @@ public class BillService {
         String status = request.getStatus() != null ? request.getStatus() : "pending";
         bill.setStatus(status);
         bill.setTotalAmount(request.getTotal());
+        bill.setPaymentMethod(request.getPaymentMethod()); // new
         
         if (request.getSeatIds() != null && !request.getSeatIds().isEmpty()) {
             String seatIdsStr = request.getSeatIds().stream()
@@ -62,7 +63,6 @@ public class BillService {
             for (Integer seatId : request.getSeatIds()) {
                 seatRepository.updateBillingStatus(seatId, true);
             }
-            // Fetch seats with table and waiter to populate bill fields
             List<SeatMaster> seats = seatRepository.findSeatsWithTableAndWaiter(request.getSeatIds());
             Set<String> tableNumbers = new HashSet<>();
             Set<String> waiterNames = new HashSet<>();
@@ -101,23 +101,26 @@ public class BillService {
     }
 
     @Transactional
-    public BillResponse confirmBill(Long id) {
-        Bill bill = billRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Bill not found"));
-        bill.setStatus("completed");
-        Bill savedBill = billRepository.save(bill);
-
-        if (savedBill.getSeatIds() != null && !savedBill.getSeatIds().isEmpty()) {
-            List<Integer> seatIdList = Arrays.stream(savedBill.getSeatIds().split(","))
-                    .map(Integer::parseInt)
-                    .collect(Collectors.toList());
-            for (Integer seatId : seatIdList) {
-                seatRepository.updateSeatStatusAndBilling(seatId, "Free", false);
-            }
-        }
-
-        return getBillResponse(savedBill);
+public BillResponse confirmBill(Long id, String paymentMethod) {
+    Bill bill = billRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Bill not found"));
+    bill.setStatus("completed");
+    if (paymentMethod != null) {
+        bill.setPaymentMethod(paymentMethod);
     }
+    Bill savedBill = billRepository.save(bill);
+
+    if (savedBill.getSeatIds() != null && !savedBill.getSeatIds().isEmpty()) {
+        List<Integer> seatIdList = Arrays.stream(savedBill.getSeatIds().split(","))
+                .map(Integer::parseInt)
+                .collect(Collectors.toList());
+        for (Integer seatId : seatIdList) {
+            seatRepository.updateSeatStatusAndBilling(seatId, "Free", false);
+        }
+    }
+
+    return getBillResponse(savedBill);
+}
 
     private BillResponse getBillResponse(Bill bill) {
         List<ItemDto> itemDtos = bill.getItems() != null ?
@@ -138,7 +141,8 @@ public class BillService {
             bill.getTotalAmount(),
             itemDtos,
             bill.getTableNumbers(),
-            bill.getWaiterNames()
+            bill.getWaiterNames(),
+            bill.getPaymentMethod()
         );
     }
 }
