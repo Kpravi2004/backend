@@ -29,7 +29,7 @@ public class Bill {
     private String waiterNames;
 
     @Column(name = "payment_method")
-    private String paymentMethod;  // Cash, Card, UPI, etc.
+    private String paymentMethod;
 
     @OneToMany(mappedBy = "bill", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<BillItem> items;

@@ -8,7 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/bills")
@@ -42,16 +43,22 @@ public class BillController {
         return ResponseEntity.ok(bill);
     }
 
-    @PutMapping("/{id}/confirm")
-public ResponseEntity<BillResponse> confirmBill(
-        @PathVariable Long id,
-        @RequestBody(required = false) Map<String, String> request) {
-    String paymentMethod = request != null ? request.get("paymentMethod") : null;
-    BillResponse response = billService.confirmBill(id, paymentMethod);
-    return ResponseEntity.ok(response);
-}
+    @PutMapping("/{id}")
+    public ResponseEntity<BillResponse> updateBill(@PathVariable Long id, @RequestBody BillRequest request) {
+        BillResponse response = billService.updateBill(id, request);
+        return ResponseEntity.ok(response);
+    }
 
-    // OPTIONS handler remains unchanged
+    @PutMapping("/{id}/confirm")
+    public ResponseEntity<BillResponse> confirmBill(
+            @PathVariable Long id,
+            @RequestBody(required = false) Map<String, String> request) {
+        String paymentMethod = request != null ? request.get("paymentMethod") : null;
+        BillResponse response = billService.confirmBill(id, paymentMethod);
+        return ResponseEntity.ok(response);
+    }
+
+    // Explicit OPTIONS handler
     @RequestMapping(method = RequestMethod.OPTIONS)
     public ResponseEntity<?> handleOptions() {
         return ResponseEntity.ok()

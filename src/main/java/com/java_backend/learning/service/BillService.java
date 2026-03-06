@@ -36,8 +36,8 @@ public class BillService {
         String status = request.getStatus() != null ? request.getStatus() : "pending";
         bill.setStatus(status);
         bill.setTotalAmount(request.getTotal());
-        bill.setPaymentMethod(request.getPaymentMethod()); // new
-        
+        bill.setPaymentMethod(request.getPaymentMethod());
+
         if (request.getSeatIds() != null && !request.getSeatIds().isEmpty()) {
             String seatIdsStr = request.getSeatIds().stream()
                     .map(String::valueOf)
@@ -58,7 +58,6 @@ public class BillService {
         billItemRepository.saveAll(items);
         savedBill.setItems(items);
 
-        // Update seat billing status and collect table/waiter info
         if (request.getSeatIds() != null && !request.getSeatIds().isEmpty()) {
             for (Integer seatId : request.getSeatIds()) {
                 seatRepository.updateBillingStatus(seatId, true);
@@ -82,6 +81,39 @@ public class BillService {
         return getBillResponse(savedBill);
     }
 
+    @Transactional
+    public BillResponse updateBill(Long id, BillRequest request) {
+        Bill bill = billRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Bill not found"));
+
+        bill.setTotalAmount(request.getTotal());
+        if (request.getStatus() != null) {
+            bill.setStatus(request.getStatus());
+        }
+        if (request.getPaymentMethod() != null) {
+            bill.setPaymentMethod(request.getPaymentMethod());
+        }
+
+        // Delete old items
+        billItemRepository.deleteByBillId(id);
+
+        // Create new items
+        List<BillItem> items = request.getItems().stream().map(itemDto -> {
+            BillItem item = new BillItem();
+            item.setItemName(itemDto.getProductName());
+            item.setProductCode(itemDto.getProductCode());
+            item.setPrice(itemDto.getUnitPrice());
+            item.setQuantity(itemDto.getQuantity());
+            item.setBill(bill);
+            return item;
+        }).collect(Collectors.toList());
+        billItemRepository.saveAll(items);
+        bill.setItems(items);
+
+        Bill savedBill = billRepository.save(bill);
+        return getBillResponse(savedBill);
+    }
+
     public List<BillResponse> getAllBills() {
         return billRepository.findAll().stream()
                 .map(this::getBillResponse)
@@ -101,26 +133,26 @@ public class BillService {
     }
 
     @Transactional
-public BillResponse confirmBill(Long id, String paymentMethod) {
-    Bill bill = billRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Bill not found"));
-    bill.setStatus("completed");
-    if (paymentMethod != null) {
-        bill.setPaymentMethod(paymentMethod);
-    }
-    Bill savedBill = billRepository.save(bill);
-
-    if (savedBill.getSeatIds() != null && !savedBill.getSeatIds().isEmpty()) {
-        List<Integer> seatIdList = Arrays.stream(savedBill.getSeatIds().split(","))
-                .map(Integer::parseInt)
-                .collect(Collectors.toList());
-        for (Integer seatId : seatIdList) {
-            seatRepository.updateSeatStatusAndBilling(seatId, "Free", false);
+    public BillResponse confirmBill(Long id, String paymentMethod) {
+        Bill bill = billRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Bill not found"));
+        bill.setStatus("completed");
+        if (paymentMethod != null) {
+            bill.setPaymentMethod(paymentMethod);
         }
-    }
+        Bill savedBill = billRepository.save(bill);
 
-    return getBillResponse(savedBill);
-}
+        if (savedBill.getSeatIds() != null && !savedBill.getSeatIds().isEmpty()) {
+            List<Integer> seatIdList = Arrays.stream(savedBill.getSeatIds().split(","))
+                    .map(Integer::parseInt)
+                    .collect(Collectors.toList());
+            for (Integer seatId : seatIdList) {
+                seatRepository.updateSeatStatusAndBilling(seatId, "Free", false);
+            }
+        }
+
+        return getBillResponse(savedBill);
+    }
 
     private BillResponse getBillResponse(Bill bill) {
         List<ItemDto> itemDtos = bill.getItems() != null ?

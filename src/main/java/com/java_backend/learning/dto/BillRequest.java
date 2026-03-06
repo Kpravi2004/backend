@@ -7,7 +7,7 @@ public class BillRequest {
     private List<ItemDto> items;
     private Double total;
     private String status;
-    private String paymentMethod;  // new field
+    private String paymentMethod;
 
     // Getters and setters
     public List<Integer> getSeatIds() { return seatIds; }

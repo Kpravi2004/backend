@@ -12,7 +12,7 @@ public class BillItem {
     @Column(name = "item_name")
     private String itemName;
 
-    @Column(name = "product_code")   // new column
+    @Column(name = "product_code")
     private String productCode;
 
     private Double price;
