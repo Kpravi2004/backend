@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -68,4 +70,13 @@ public class BillController {
                 .header("Access-Control-Max-Age", "3600")
                 .build();
     }
+    @GetMapping("/by-date")
+public ResponseEntity<List<BillResponse>> getBillsByDate(@RequestParam String date) {
+    // date format: yyyy-MM-dd
+    LocalDate localDate = LocalDate.parse(date);
+    LocalDateTime start = localDate.atStartOfDay();
+    LocalDateTime end = localDate.plusDays(1).atStartOfDay();
+    List<BillResponse> bills = billService.getBillsBetween(start, end);
+    return ResponseEntity.ok(bills);
+}
 }

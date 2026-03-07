@@ -177,4 +177,9 @@ public class BillService {
             bill.getPaymentMethod()
         );
     }
+    public List<BillResponse> getBillsBetween(LocalDateTime start, LocalDateTime end) {
+    return billRepository.findByDateTimeBetween(start, end).stream()
+            .map(this::getBillResponse)
+            .collect(Collectors.toList());
+}
 }
