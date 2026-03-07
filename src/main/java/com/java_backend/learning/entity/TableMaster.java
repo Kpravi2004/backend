@@ -1,8 +1,9 @@
 package com.java_backend.learning.entity;
-import java.util.ArrayList;
-import java.util.List;
+
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "table_entity")
@@ -28,22 +29,21 @@ public class TableMaster {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "waiter_id")
-    private Waiter waiter;  // relationship, not a direct column
+    private Waiter waiter;
 
     @OneToMany(mappedBy = "table", cascade = CascadeType.ALL)
     private List<SeatMaster> seats = new ArrayList<>();
 
-    // Transient fields for JSON (will be populated from waiter)
     @Transient
-    @JsonProperty("waiterId")
     private Integer waiterId;
 
     @Transient
-    @JsonProperty("waiterName")
     private String waiterName;
 
-    // Getters & Setters
+    // Constructors
+    public TableMaster() {}
 
+    // Getters and setters
     public Integer getTableId() { return tableId; }
     public void setTableId(Integer tableId) { this.tableId = tableId; }
 
@@ -75,13 +75,21 @@ public class TableMaster {
         }
     }
 
-    // Transient getters
+    @JsonProperty("waiterId")
     public Integer getWaiterId() { return waiterId; }
-    public void setWaiterId(Integer waiterId) { this.waiterId = waiterId; }
 
+    @JsonProperty("waiterName")
     public String getWaiterName() { return waiterName; }
-    public void setWaiterName(String waiterName) { /* not stored */ }
 
     public List<SeatMaster> getSeats() { return seats; }
     public void setSeats(List<SeatMaster> seats) { this.seats = seats; }
+
+    // Lifecycle callback to populate transient fields after load
+    @PostLoad
+    private void postLoad() {
+        if (waiter != null) {
+            this.waiterId = waiter.getWaiterId();
+            this.waiterName = waiter.getWaiterName();
+        }
+    }
 }
